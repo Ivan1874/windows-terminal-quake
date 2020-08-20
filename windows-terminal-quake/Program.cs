@@ -34,6 +34,11 @@ namespace WindowsTerminalQuake
 						}
 					};
 					process.Start();
+					process.WaitForExit();
+					process = Process.GetProcessesByName("WindowsTerminal").FirstOrDefault();
+					if (process == null) {
+						throw new ApplicationException("Wrapper was unable to start Windows Terminal");
+					}
 				}
 
 				process.EnableRaisingEvents = true;
