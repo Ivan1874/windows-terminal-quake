@@ -1,0 +1,1 @@
+ILRepack.exe /out:windows-terminal-quake.exe .\windows-terminal-quake.exe Newtonsoft.Json.dll Polly.dll Serilog.dll Serilog.Sinks.File.dll

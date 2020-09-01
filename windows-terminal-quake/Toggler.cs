@@ -25,8 +25,11 @@ namespace WindowsTerminalQuake
 
 			User32.Rect rect = default;
 			var ok = User32.GetWindowRect(_process.MainWindowHandle, ref rect);
-			var isOpen = rect.Top >= GetScreenWithCursor().Bounds.Y;
-			User32.ShowWindow(_process.MainWindowHandle, NCmdShow.MAXIMIZE);
+			var isOpen = false;
+
+			var screen = GetScreenWithCursor();
+			var bounds = GetBounds(screen, 1, 0);
+			User32.MoveWindow(_process.MainWindowHandle, bounds.X, bounds.Y, bounds.Width, bounds.Height, true);
 
 			// Register hotkeys
 			Settings.Get(s =>

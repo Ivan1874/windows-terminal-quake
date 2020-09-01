@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Windows.Forms;
 using WindowsTerminalQuake.Native;
 using WindowsTerminalQuake.UI;
@@ -14,49 +15,73 @@ namespace WindowsTerminalQuake
 
 		public static void Main(string[] args)
 		{
-			Logging.Configure();
+			Mutex mutex = new Mutex(true, "windows-terminal-quake");
 
 			_trayIcon = new TrayIcon((s, a) => Close());
 
+			if (!mutex.WaitOne(TimeSpan.Zero, true))
+			{
+				_trayIcon.Notify(ToolTipIcon.Info, "Only one instance allowed");
+				_trayIcon?.Dispose();
+			}
+
+			Logging.Configure();
+
+			Semaphore lock_obj = new Semaphore(1, 1);
+			var first_run = true;
+
 			try
 			{
-				Process process = Process.GetProcessesByName("WindowsTerminal").FirstOrDefault();
-				if (process == null)
+				while (true)
 				{
-					process = new Process
+					lock_obj.WaitOne();
+					Process process = Process.GetProcessesByName("WindowsTerminal").FirstOrDefault();
+					if (process == null || process.MainWindowHandle == IntPtr.Zero)
 					{
-						StartInfo = new ProcessStartInfo
+						process = new Process
 						{
-							FileName = "wt",
-							UseShellExecute = false,
-							RedirectStandardOutput = true,
-							WindowStyle = ProcessWindowStyle.Maximized
+							StartInfo = new ProcessStartInfo
+							{
+								FileName = "wt",
+								UseShellExecute = false,
+								RedirectStandardOutput = true,
+								WindowStyle = ProcessWindowStyle.Maximized
+							}
+						};
+						process.Start();
+						process.WaitForExit();
+						process = Process.GetProcessesByName("WindowsTerminal").FirstOrDefault();
+						if (process == null)
+						{
+							throw new ApplicationException("Wrapper was unable to start Windows Terminal");
+						}
+						Thread.Sleep(500);
+					}
+
+					process.EnableRaisingEvents = true;
+					process.Exited += (sender, e) =>
+					{
+						if (Settings.Instance.Restart)
+						{
+							_toggler?.Dispose();
+							_toggler = null;
+							process = null;
+							lock_obj.Release();
+						}
+						else
+						{
+							Close();
 						}
 					};
-					process.Start();
-					process.WaitForExit();
-					process = Process.GetProcessesByName("WindowsTerminal").FirstOrDefault();
-					if (process == null) {
-						throw new ApplicationException("Wrapper was unable to start Windows Terminal");
+					_toggler = new Toggler(process);
+
+					if (first_run)
+					{
+						var hks = string.Join(" or ", Settings.Instance.Hotkeys.Select(hk => $"{hk.Modifiers}+{hk.Key}"));
+						_trayIcon.Notify(ToolTipIcon.Info, $"Windows Terminal Quake is running, press {hks} to toggle.");
+						first_run = false;
 					}
 				}
-
-				process.EnableRaisingEvents = true;
-				process.Exited += (sender, e) =>
-				{
-					Close();
-				};
-				_toggler = new Toggler(process);
-
-				// Transparency
-				Settings.Get(s =>
-				{
-					TransparentWindow.SetTransparent(process, s.Opacity);
-				});
-
-				var hks = string.Join(" or ", Settings.Instance.Hotkeys.Select(hk => $"{hk.Modifiers}+{hk.Key}"));
-
-				_trayIcon.Notify(ToolTipIcon.Info, $"Windows Terminal Quake is running, press {hks} to toggle.");
 			}
 			catch (Exception ex)
 			{
@@ -69,10 +94,8 @@ namespace WindowsTerminalQuake
 		private static void Close()
 		{
 			_toggler?.Dispose();
-			_toggler = null;
 
 			_trayIcon?.Dispose();
-			_trayIcon = null;
 		}
 	}
 }

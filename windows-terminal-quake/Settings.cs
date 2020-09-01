@@ -119,7 +119,7 @@ namespace WindowsTerminalQuake
 
 		public bool Notifications { get; set; } = true;
 
-		public int Opacity { get; set; } = 80;
+		public bool Restart { get; set; } = true;
 
 		public float VerticalScreenCoverage { get; set; } = 100;
 
