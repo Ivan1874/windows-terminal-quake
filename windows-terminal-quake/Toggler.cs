@@ -45,6 +45,11 @@ namespace WindowsTerminalQuake
 				});
 			});
 
+			if (Settings.Instance.Topmost)
+			{
+				User32.SetWindowPos(_process.MainWindowHandle, User32.HWND_TOPMOST, 0, 0, 0, 0, 0);
+			}
+
 			HotKeyManager.HotKeyPressed += (s, a) =>
 			{
 				var stepCount = (int)Math.Max(Math.Ceiling(Settings.Instance.ToggleDurationMs / 25f), 1f);

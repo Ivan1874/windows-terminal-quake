@@ -8,6 +8,9 @@ namespace WindowsTerminalQuake.Native
 		[DllImport("user32.dll", SetLastError = true)]
 		public static extern bool MoveWindow(IntPtr hWnd, int X, int Y, int nWidth, int nHeight, bool bRepaint);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
+
 		[DllImport("user32.dll")]
 		public static extern IntPtr SetForegroundWindow(IntPtr hWnd);
 
@@ -42,5 +45,8 @@ namespace WindowsTerminalQuake.Native
 		public const int WS_EX_APPWINDOW = 0x00040000;
 		public const int WS_EX_LAYERED = 0x80000;
 		public const int WS_EX_TOOLWINDOW = 0x00000080;
+
+		public const int WS_EX_TOPMOST = 0x00000008;
+		public const int HWND_TOPMOST = -1;
 	}
 }

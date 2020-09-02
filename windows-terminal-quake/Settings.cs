@@ -121,9 +121,11 @@ namespace WindowsTerminalQuake
 
 		public bool Restart { get; set; } = true;
 
-		public float VerticalScreenCoverage { get; set; } = 100;
+		public bool Topmost { get; set; } = true;
 
-		public float HorizontalScreenCoverage { get; set; } = 100;
+		public float VerticalScreenCoverage { get; set; } = 80;
+
+		public float HorizontalScreenCoverage { get; set; } = 80;
 
 		public int ToggleDurationMs { get; set; } = 250;
 

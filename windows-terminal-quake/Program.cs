@@ -13,6 +13,9 @@ namespace WindowsTerminalQuake
 		private static Toggler _toggler;
 		private static TrayIcon _trayIcon;
 
+		private static bool exited = false;
+		private static Semaphore lock_obj = new Semaphore(1, 1);
+
 		public static void Main(string[] args)
 		{
 			Mutex mutex = new Mutex(true, "windows-terminal-quake");
@@ -22,19 +25,20 @@ namespace WindowsTerminalQuake
 			if (!mutex.WaitOne(TimeSpan.Zero, true))
 			{
 				_trayIcon.Notify(ToolTipIcon.Info, "Only one instance allowed");
+				exited = true;
 				_trayIcon?.Dispose();
 			}
 
 			Logging.Configure();
 
-			Semaphore lock_obj = new Semaphore(1, 1);
 			var first_run = true;
 
 			try
 			{
-				while (true)
+				while (!exited)
 				{
 					lock_obj.WaitOne();
+					if (exited) continue;
 					Process process = Process.GetProcessesByName("WindowsTerminal").FirstOrDefault();
 					if (process == null || process.MainWindowHandle == IntPtr.Zero)
 					{
@@ -93,9 +97,14 @@ namespace WindowsTerminalQuake
 
 		private static void Close()
 		{
+			exited = true;
+			lock_obj.Release();
+
 			_toggler?.Dispose();
+			_toggler = null;
 
 			_trayIcon?.Dispose();
+			_trayIcon = null;
 		}
 	}
 }

@@ -25,7 +25,9 @@
 	// due to the terminal being bound to column widths (eg. try 100.5 or 101).
 	"HorizontalScreenCoverage": 80,
 
-	"Restart": true
+	"Restart": true,
+
+	"Topmost": true
 
 	// HotKeys.Modifiers:
 	// Alt, Control, Shift, Windows
